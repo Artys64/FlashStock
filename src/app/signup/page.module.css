@@ -20,6 +20,12 @@
   background: #111;
 }
 
+.divider {
+  border: none;
+  border-top: 1px solid #2a2a2a;
+  margin: 4px 0;
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -44,6 +50,7 @@
 
 .error {
   color: #ff6b6b;
+  font-size: 14px;
 }
 
 .footer {

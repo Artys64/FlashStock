@@ -2,6 +2,7 @@
 
 import { FormEvent, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import styles from "./page.module.css";
 
 export default function LoginPage() {
@@ -74,6 +75,9 @@ function LoginForm() {
         <button className={styles.button} type="submit" disabled={loading}>
           {loading ? "Entrando..." : "Entrar"}
         </button>
+        <p className={styles.footer}>
+          Não tem conta? <Link href="/signup">Criar conta</Link>
+        </p>
       </form>
     </main>
   );
