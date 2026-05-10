@@ -1,4 +1,4 @@
-# FLASH-ESTOQUE
+# FLASHSTOCK
 
 Estrutura inicial do projeto baseada no Master SDD, usando Next.js (App Router) e organização de domínio para a Fase 1.
 
