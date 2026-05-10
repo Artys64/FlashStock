@@ -1,0 +1,133 @@
+@baseUrl = http://localhost:3000
+@organizationId = 00000000-0000-0000-0000-000000000001
+@establishmentId = 00000000-0000-0000-0000-000000000002
+@adminUserId = 00000000-0000-0000-0000-000000000010
+@operatorUserId = 00000000-0000-0000-0000-000000000011
+@categoryId = 00000000-0000-0000-0000-000000000100
+@productId = 00000000-0000-0000-0000-000000000200
+@batchId = 00000000-0000-0000-0000-000000000300
+
+### Health Check
+GET {{baseUrl}}/
+
+### Create Organization (admin.manage)
+POST {{baseUrl}}/api/organizations
+Content-Type: application/json
+
+{
+  "name": "Empresa Exemplo"
+}
+
+### Create Establishment (admin.manage - currently not protected)
+POST {{baseUrl}}/api/establishments
+Content-Type: application/json
+
+{
+  "organizationId": "{{organizationId}}",
+  "name": "Filial Centro"
+}
+
+### Create Category (admin.manage - currently not protected)
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+
+{
+  "organizationId": "{{organizationId}}",
+  "name": "Laticinios",
+  "leadTimeAlertDays": 5
+}
+
+### Create Product (admin.manage - currently not protected)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "organizationId": "{{organizationId}}",
+  "categoryId": "{{categoryId}}",
+  "sku": "LEITE-INT-1L",
+  "name": "Leite Integral 1L",
+  "uom": "un",
+  "minimumStock": 20
+}
+
+### List Products (not protected)
+GET {{baseUrl}}/api/products/list?organizationId={{organizationId}}
+
+### Register Inbound (movements.write)
+POST {{baseUrl}}/api/batches/inbound
+Content-Type: application/json
+x-user-id: {{adminUserId}}
+
+{
+  "establishmentId": "{{establishmentId}}",
+  "productId": "{{productId}}",
+  "lotCode": "L2026A",
+  "expiryDate": "2026-05-20",
+  "quantity": 35,
+  "costPrice": 4.80,
+  "locationId": "A1-01",
+  "actorUserId": "{{adminUserId}}"
+}
+
+### Register Outbound (movements.write)
+POST {{baseUrl}}/api/batches/outbound
+Content-Type: application/json
+x-user-id: {{adminUserId}}
+
+{
+  "establishmentId": "{{establishmentId}}",
+  "productId": "{{productId}}",
+  "quantity": 5,
+  "selectedBatchId": "{{batchId}}",
+  "movementType": "exit_sale",
+  "actorUserId": "{{adminUserId}}"
+}
+
+### List Batches (inventory.read)
+GET {{baseUrl}}/api/batches/list?establishmentId={{establishmentId}}&status=alert
+x-user-id: {{operatorUserId}}
+
+### Update Batch Quarantine/Expiry (inventory.write)
+PATCH {{baseUrl}}/api/batches/{{batchId}}
+Content-Type: application/json
+x-user-id: {{adminUserId}}
+
+{
+  "establishmentId": "{{establishmentId}}",
+  "actorUserId": "{{adminUserId}}",
+  "expectedVersion": 1,
+  "quarantined": true,
+  "expiryDate": "2026-05-18"
+}
+
+### Update Batch with Merge After 409 (inventory.write)
+PATCH {{baseUrl}}/api/batches/{{batchId}}
+Content-Type: application/json
+x-user-id: {{adminUserId}}
+
+{
+  "establishmentId": "{{establishmentId}}",
+  "actorUserId": "{{adminUserId}}",
+  "expectedVersion": 1,
+  "quarantined": true,
+  "expiryDate": "2026-05-18",
+  "merge": {
+    "strategy": "field_level",
+    "resolved": {
+      "quarantined": true,
+      "expiryDate": "2026-05-19"
+    }
+  }
+}
+
+### Dashboard Summary (inventory.read)
+GET {{baseUrl}}/api/dashboard/summary?establishmentId={{establishmentId}}
+x-user-id: {{operatorUserId}}
+
+### Inventory Movements (movements.read)
+GET {{baseUrl}}/api/inventory-movements?establishmentId={{establishmentId}}&page=1&pageSize=20
+x-user-id: {{operatorUserId}}
+
+### Audit Logs (audit.read)
+GET {{baseUrl}}/api/audit-logs?establishmentId={{establishmentId}}&page=1&pageSize=20
+x-user-id: {{adminUserId}}

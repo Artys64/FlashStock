@@ -1,0 +1,159 @@
+{
+  "info": {
+    "name": "GestStock API",
+    "_postman_id": "6e4b2468-3ce8-47f9-8eab-7d4f4a4868d0",
+    "description": "Collection inicial da API VIGIA-ESTOQUE com RBAC via x-user-id.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "organizationId", "value": "00000000-0000-0000-0000-000000000001" },
+    { "key": "establishmentId", "value": "00000000-0000-0000-0000-000000000002" },
+    { "key": "adminUserId", "value": "00000000-0000-0000-0000-000000000010" },
+    { "key": "operatorUserId", "value": "00000000-0000-0000-0000-000000000011" },
+    { "key": "categoryId", "value": "00000000-0000-0000-0000-000000000100" },
+    { "key": "productId", "value": "00000000-0000-0000-0000-000000000200" },
+    { "key": "batchId", "value": "00000000-0000-0000-0000-000000000300" }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/"
+      }
+    },
+    {
+      "name": "Create Organization",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Empresa Exemplo\"\n}"
+        },
+        "url": "{{baseUrl}}/api/organizations"
+      }
+    },
+    {
+      "name": "Create Establishment",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"organizationId\": \"{{organizationId}}\",\n  \"name\": \"Filial Centro\"\n}"
+        },
+        "url": "{{baseUrl}}/api/establishments"
+      }
+    },
+    {
+      "name": "Create Category",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"organizationId\": \"{{organizationId}}\",\n  \"name\": \"Laticinios\",\n  \"leadTimeAlertDays\": 5\n}"
+        },
+        "url": "{{baseUrl}}/api/categories"
+      }
+    },
+    {
+      "name": "Create Product",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"organizationId\": \"{{organizationId}}\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"sku\": \"LEITE-INT-1L\",\n  \"name\": \"Leite Integral 1L\",\n  \"uom\": \"un\",\n  \"minimumStock\": 20\n}"
+        },
+        "url": "{{baseUrl}}/api/products"
+      }
+    },
+    {
+      "name": "List Products",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/products/list?organizationId={{organizationId}}"
+      }
+    },
+    {
+      "name": "Register Inbound",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-user-id", "value": "{{adminUserId}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"establishmentId\": \"{{establishmentId}}\",\n  \"productId\": \"{{productId}}\",\n  \"lotCode\": \"L2026A\",\n  \"expiryDate\": \"2026-05-20\",\n  \"quantity\": 35,\n  \"costPrice\": 4.8,\n  \"locationId\": \"A1-01\",\n  \"actorUserId\": \"{{adminUserId}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/batches/inbound"
+      }
+    },
+    {
+      "name": "Register Outbound",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-user-id", "value": "{{adminUserId}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"establishmentId\": \"{{establishmentId}}\",\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 5,\n  \"selectedBatchId\": \"{{batchId}}\",\n  \"movementType\": \"exit_sale\",\n  \"actorUserId\": \"{{adminUserId}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/batches/outbound"
+      }
+    },
+    {
+      "name": "List Batches",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "x-user-id", "value": "{{operatorUserId}}" }],
+        "url": "{{baseUrl}}/api/batches/list?establishmentId={{establishmentId}}&status=alert"
+      }
+    },
+    {
+      "name": "Update Batch",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-user-id", "value": "{{adminUserId}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"establishmentId\": \"{{establishmentId}}\",\n  \"actorUserId\": \"{{adminUserId}}\",\n  \"quarantined\": true,\n  \"expiryDate\": \"2026-05-18\"\n}"
+        },
+        "url": "{{baseUrl}}/api/batches/{{batchId}}"
+      }
+    },
+    {
+      "name": "Dashboard Summary",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "x-user-id", "value": "{{operatorUserId}}" }],
+        "url": "{{baseUrl}}/api/dashboard/summary?establishmentId={{establishmentId}}"
+      }
+    },
+    {
+      "name": "Inventory Movements",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "x-user-id", "value": "{{operatorUserId}}" }],
+        "url": "{{baseUrl}}/api/inventory-movements?establishmentId={{establishmentId}}&page=1&pageSize=20"
+      }
+    },
+    {
+      "name": "Audit Logs",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "x-user-id", "value": "{{adminUserId}}" }],
+        "url": "{{baseUrl}}/api/audit-logs?establishmentId={{establishmentId}}&page=1&pageSize=20"
+      }
+    }
+  ]
+}

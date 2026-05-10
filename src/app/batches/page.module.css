@@ -1,0 +1,419 @@
+.page {
+  min-height: 100vh;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 10% -10%, #dbeafe 0%, transparent 45%),
+    radial-gradient(circle at 95% 5%, #e0f2fe 0%, transparent 35%),
+    linear-gradient(160deg, #f6f9fc, #edf2f7);
+  color: #12202f;
+}
+
+.container {
+  width: min(1240px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 16px;
+}
+
+.commandBar {
+  position: sticky;
+  top: 12px;
+  z-index: 15;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  border: 1px solid #d7e1ea;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 8px 30px rgba(22, 34, 49, 0.06);
+}
+
+.headerTop {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.title {
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  margin: 0;
+  line-height: 1.15;
+}
+
+.subtitle {
+  color: #4f667d;
+  font-size: 0.95rem;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-size: 1.08rem;
+  margin: 0;
+}
+
+.sectionHint {
+  color: #5b7084;
+  font-size: 0.88rem;
+}
+
+.row {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.commandGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(220px, 1fr) minmax(220px, 1.1fr);
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #345067;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.input,
+.select {
+  border: 1px solid #c5d3df;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 0.95rem;
+  background: #fbfdff;
+  color: #102233;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 500;
+}
+
+.button {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #175187, #1f6cb2);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+  font-weight: 600;
+}
+
+.buttonSecondary {
+  composes: button;
+  background: linear-gradient(135deg, #355b78, #2d6a92);
+}
+
+.button:hover,
+.buttonSecondary:hover {
+  transform: translateY(-1px);
+}
+
+.button:disabled,
+.buttonSecondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.semaphoreGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.semaphoreCard {
+  border-radius: 14px;
+  border: 1px solid #d7e1ea;
+  padding: 16px;
+  background: #fff;
+  display: grid;
+  gap: 4px;
+  box-shadow: 0 4px 16px rgba(18, 32, 47, 0.05);
+}
+
+.semaphoreCard p {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.semaphoreCard strong {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.semaphoreCard small {
+  color: #4f667d;
+  font-size: 0.8rem;
+}
+
+.critical {
+  border-left: 6px solid #b12822;
+}
+
+.warning {
+  border-left: 6px solid #b08611;
+}
+
+.replenish {
+  border-left: 6px solid #166f5f;
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #d8e3ee;
+  border-radius: 12px;
+  background: #fdfefe;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.table th,
+.table td {
+  border-bottom: 1px solid #e4ebf2;
+  text-align: left;
+  padding: 12px 10px;
+}
+
+.table th {
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #4f667c;
+  background: #f3f7fb;
+}
+
+.table tbody tr {
+  cursor: pointer;
+}
+
+.table tbody tr:hover {
+  background: #f6f9fc;
+}
+
+.rowSelected {
+  background: #edf5ff;
+}
+
+.statusBadge {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.status_active {
+  background: #e9f4ec;
+  color: #166534;
+}
+
+.status_alert {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status_expired {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status_quarantine {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.stateInfo {
+  color: #3b556b;
+  font-size: 0.92rem;
+  background: #f2f7fc;
+  border: 1px solid #dbe8f5;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.stateError {
+  color: #8f1111;
+  font-size: 0.9rem;
+}
+
+.stateSuccess {
+  color: #0e6a30;
+  font-size: 0.9rem;
+}
+
+.feedList {
+  display: grid;
+  gap: 10px;
+}
+
+.feedItem {
+  border: 1px solid #dbe5ef;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #f9fcff;
+}
+
+.feedMessage {
+  margin: 0 0 4px;
+  color: #183146;
+}
+
+.feedMeta {
+  margin: 0;
+  color: #5b7084;
+  font-size: 0.82rem;
+}
+
+.drawerBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 17, 27, 0.2);
+  z-index: 25;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: min(430px, 100%);
+  background: #f9fcff;
+  border-left: 1px solid #d8e3ee;
+  box-shadow: -12px 0 32px rgba(12, 26, 42, 0.16);
+  padding: 16px;
+  transform: translateX(104%);
+  transition: transform 0.25s ease;
+  z-index: 30;
+  display: grid;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.drawerOpen {
+  transform: translateX(0);
+}
+
+.drawerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.drawerHeader h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.iconButton {
+  border: 1px solid #c4d4e3;
+  background: #fff;
+  color: #27435a;
+  border-radius: 10px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.drawerForm {
+  display: grid;
+  gap: 12px;
+}
+
+.drawerActions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.danger {
+  color: #8f1111;
+  font-size: 0.9rem;
+}
+
+.success {
+  color: #0e6a30;
+  font-size: 0.9rem;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 18, 30, 0.4);
+  display: grid;
+  place-items: center;
+  z-index: 45;
+  padding: 16px;
+}
+
+.modal {
+  width: min(760px, 100%);
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #d9e3ed;
+  padding: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.diffTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.diffTable th,
+.diffTable td {
+  border-bottom: 1px solid #e4ebf2;
+  padding: 8px 6px;
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 12px;
+  }
+
+  .card {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .commandBar {
+    position: static;
+  }
+
+  .commandGrid {
+    grid-template-columns: 1fr;
+  }
+}
