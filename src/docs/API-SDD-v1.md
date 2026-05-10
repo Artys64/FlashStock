@@ -158,3 +158,51 @@
   - `roleId` pode ser omitido; fallback automatico para role `operador`.
 - `GET /api/invitations/pending`
   - Lista convites pendentes para o email do usuario autenticado.
+
+## 9) Atualizacao 2026-05-10 - Job interno de notificacao por email
+- `POST /api/internal/jobs/alert-emails`
+  - Protecao: header `x-cron-secret` (ou `Authorization: Bearer <CRON_SECRET>`).
+  - Query opcional: `establishmentId=<uuid>` para executar em apenas 1 estabelecimento.
+  - Dependencias de ambiente:
+    - `SUPABASE_SERVICE_ROLE_KEY`
+    - `CRON_SECRET`
+    - `RESEND_API_KEY`
+    - `ALERT_EMAIL_FROM`
+
+### Regras automaticas de aviso (sem formulario manual)
+- O marco de alerta e calculado por lote conforme prazo total (`created_at` -> `expiry_date`):
+  - `>= 180 dias`: avisos em `30, 15, 7, 1` dias.
+  - `61 a 179 dias`: avisos em `15, 7, 3, 1` dias.
+  - `<= 60 dias`: avisos em `7, 3, 1` dias.
+- `expired` e `quarantine` geram notificacao critica diaria por lote.
+- Snooze ativo (`batch_alert_snoozes`) bloqueia apenas aviso nao vencido.
+
+### Deduplicacao e trilha
+- Tabela: `alert_email_notifications`.
+- Deduplicacao:
+  - `alert_milestone`: unica por `establishment + user + batch + milestone`.
+  - `expired_daily` e `quarantine_daily`: unica por `establishment + user + batch + data operacional`.
+- Auditoria:
+  - `alert_email_sent`
+  - `alert_email_failed`
+
+### Retry com backoff
+- Falhas entram em retentativa automatica com escada:
+  - tentativa 1 falhou -> +15 min
+  - tentativa 2 falhou -> +1h
+  - tentativa 3 falhou -> +6h
+  - tentativa 4 falhou -> +24h
+  - tentativa 5 falhou -> encerra sem novo agendamento
+- Campos de controle:
+  - `attempts`
+  - `last_attempt_at`
+  - `next_retry_at`
+
+## 10) Operacao Admin de notificacoes
+- `GET /api/admin/alert-email-notifications?establishmentId=...&status?=failed&page?=1&pageSize?=30`
+  - Requer `admin.manage`.
+  - Lista notificacoes com status/tentativas/erros.
+- `POST /api/admin/alert-email-notifications/retry`
+  - Body: `{ establishmentId, notificationIds?: uuid[] }`
+  - Requer `admin.manage`.
+  - Reagenda notificacoes `failed` para `pending` com `next_retry_at = now`.

@@ -108,3 +108,27 @@ npm run dev
 1. Implementar repositórios Supabase para os `ports`.
 2. Criar endpoints (`/api`) para entrada/saída e cadastro.
 3. Adicionar autenticação e RBAC.
+
+## CI/CD (deploy automatizado)
+
+Foi adicionado o workflow `/.github/workflows/deploy.yml` com este fluxo:
+
+1. Em `pull_request` para `main`:
+- roda `npm ci`
+- roda `npm run lint`
+- roda `npm run test`
+- roda `npm run build`
+- publica deploy de preview na Vercel
+
+2. Em `push` para `main`:
+- roda as mesmas validacoes
+- publica deploy de producao na Vercel
+
+3. Em `workflow_dispatch`:
+- permite disparo manual no GitHub Actions
+
+Secrets necessarios no repositorio GitHub:
+
+1. `VERCEL_TOKEN`
+2. `VERCEL_ORG_ID`
+3. `VERCEL_PROJECT_ID`
