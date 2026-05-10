@@ -2,6 +2,7 @@ import { pickPvpsBatch } from "@/core/domain/rules";
 import { authorizeRequest } from "@/lib/auth/guard";
 import { badRequest, internalServerError, unauthorized } from "@/lib/http/errors";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { compareIsoDate, getTodayInOperationTimezone } from "@/lib/time/business-date";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
   const client = createSupabaseServerClient({ accessToken: auth.session.accessToken });
   const { data, error } = await client
     .from("batches")
-    .select("id, product_id, establishment_id, lot_code, expiry_date, quantity_current, cost_price, location_id, quarantined, version")
+    .select("id, product_id, establishment_id, lot_code, expiry_date, quantity_current, cost_price, location_id, quarantined, version, created_at")
     .eq("establishment_id", establishmentId)
     .eq("product_id", productId)
     .is("archived_at", null);
@@ -43,13 +44,26 @@ export async function GET(request: NextRequest) {
       locationId: typed.location_id ? String(typed.location_id) : undefined,
       quarantined: Boolean(typed.quarantined),
       version: Number(typed.version),
+      createdAt: typed.created_at ? String(typed.created_at) : undefined,
     };
   });
 
-  const suggested = pickPvpsBatch(batches);
+  const todayDateIso = getTodayInOperationTimezone();
+  const suggested = pickPvpsBatch(batches, { todayDateIso });
   const alternatives = batches
-    .filter((batch) => batch.id !== suggested?.id && !batch.quarantined && batch.quantityCurrent > 0)
-    .sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime())
+    .filter(
+      (batch) =>
+        batch.id !== suggested?.id &&
+        !batch.quarantined &&
+        batch.quantityCurrent > 0 &&
+        compareIsoDate(batch.expiryDate, todayDateIso) > 0,
+    )
+    .sort(
+      (a, b) =>
+        compareIsoDate(a.expiryDate, b.expiryDate) ||
+        compareIsoDate(a.createdAt ?? "1970-01-01T00:00:00.000Z", b.createdAt ?? "1970-01-01T00:00:00.000Z") ||
+        a.id.localeCompare(b.id),
+    )
     .slice(0, 5)
     .map((batch) => ({
       batchId: batch.id,

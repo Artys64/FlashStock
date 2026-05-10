@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import test from "node:test";
 import { buildConflictPayload, buildMergedUpdate } from "./optimistic-conflict.ts";
 
@@ -50,3 +50,4 @@ test("buildMergedUpdate resolves fields for field_level", () => {
 
   assert.deepEqual(result, { quarantined: false, expiryDate: "2026-05-21" });
 });
+

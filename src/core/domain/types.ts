@@ -33,6 +33,7 @@ export interface Batch {
   locationId?: string;
   quarantined: boolean;
   version: number;
+  createdAt?: string;
 }
 
 export interface Category {

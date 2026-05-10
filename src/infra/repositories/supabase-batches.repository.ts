@@ -14,6 +14,7 @@ function mapBatch(row: Record<string, unknown>): Batch {
     locationId: row.location_id ? String(row.location_id) : undefined,
     quarantined: Boolean(row.quarantined),
     version: Number(row.version),
+    createdAt: row.created_at ? String(row.created_at) : undefined,
   };
 }
 
@@ -44,6 +45,7 @@ export class SupabaseBatchesRepository implements BatchesRepository {
       .from("batches")
       .select("*")
       .eq("id", id)
+      .is("archived_at", null)
       .maybeSingle();
     if (error) throw new Error(error.message);
     return data ? mapBatch(data) : null;
@@ -54,21 +56,25 @@ export class SupabaseBatchesRepository implements BatchesRepository {
       .from("batches")
       .select("*")
       .eq("product_id", productId)
-      .eq("establishment_id", establishmentId);
+      .eq("establishment_id", establishmentId)
+      .is("archived_at", null);
     if (error) throw new Error(error.message);
     return (data ?? []).map(mapBatch);
   }
 
   async updateQuantity(batchId: string, quantityCurrent: number): Promise<void> {
+    if (quantityCurrent < 0) throw new Error("Negative stock is not allowed.");
+
     const { data: currentBatch, error: findError } = await this.client
       .from("batches")
       .select("version")
       .eq("id", batchId)
+      .is("archived_at", null)
       .maybeSingle();
     if (findError) throw new Error(findError.message);
     if (!currentBatch) throw new Error("Batch not found.");
 
-    const { error } = await this.client
+    const { data: updated, error } = await this.client
       .from("batches")
       .update({
         quantity_current: quantityCurrent,
@@ -76,7 +82,11 @@ export class SupabaseBatchesRepository implements BatchesRepository {
         version: Number(currentBatch.version) + 1,
       })
       .eq("id", batchId)
-      .eq("version", Number(currentBatch.version));
+      .is("archived_at", null)
+      .eq("version", Number(currentBatch.version))
+      .select("id")
+      .maybeSingle();
     if (error) throw new Error(error.message);
+    if (!updated) throw new Error("Optimistic concurrency conflict.");
   }
 }

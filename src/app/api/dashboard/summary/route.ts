@@ -2,11 +2,10 @@ import { authorizeRequest } from "@/lib/auth/guard";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { badRequest, internalServerError, unauthorized } from "@/lib/http/errors";
+import { diffDaysIsoDate, getTodayInOperationTimezone } from "@/lib/time/business-date";
 
-function parseDaysLeft(expiryDate: string): number {
-  const today = new Date();
-  const expiry = new Date(expiryDate);
-  return Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+function parseDaysLeft(expiryDate: string, now = new Date()): number {
+  return diffDaysIsoDate(getTodayInOperationTimezone(now), expiryDate);
 }
 
 export async function GET(request: NextRequest) {

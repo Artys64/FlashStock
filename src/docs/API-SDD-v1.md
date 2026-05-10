@@ -26,13 +26,15 @@
 ## 2.3 Catálogo
 - `POST /api/categories`
   - Body: `{ establishmentId, organizationId, name, leadTimeAlertDays }`
+- `GET /api/categories/list?organizationId=...&establishmentId=...`
 - `POST /api/products`
   - Body: `{ establishmentId, organizationId, categoryId, sku, name, uom, minimumStock }`
 - `GET /api/products/list?organizationId=...&establishmentId=...`
 
 ## 2.4 Lotes e movimentação
 - `POST /api/batches/inbound`
-  - Body: `{ establishmentId, productId, lotCode, expiryDate, quantity, costPrice, locationId?, actorUserId? }`
+  - Body: `{ establishmentId, productId, lotCode, expiryDate, quantity, locationId?, actorUserId? }`
+  - `costPrice` opcional para compatibilidade legada; quando ausente, o backend persiste `0`.
 - `POST /api/batches/outbound`
   - Body: `{ establishmentId, productId, quantity, selectedBatchId, reasonCode?, actorUserId?, movementType }`
   - `movementType`: `exit_sale | exit_loss | adjustment`
@@ -58,6 +60,10 @@
   - Body: `{ establishmentId, email, roleId, expiresAt? }`
 - `PATCH /api/admin/invitations`
   - Body: `{ establishmentId, invitationId }` (revoga convite)
+- `POST /api/admin/invitations/accept`
+  - Body: `{ invitationId }`
+  - Sessao autenticada obrigatoria; o email da sessao deve coincidir com o email do convite.
+  - Efeito: vincula/atualiza `user_roles` para o usuario autenticado no estabelecimento e marca convite como `accepted`.
 
 ## 3) Aderência ao Master SDD
 - RN01 PVPS: implementado no fluxo de saída, com exigência de `reasonCode` fora do lote sugerido.
@@ -132,6 +138,7 @@
 - `404 NOT_FOUND` - entidade não encontrada no tenant.
 - `409 OPTIMISTIC_CONFLICT` - concorrência.
 - `422 BUSINESS_RULE_VIOLATION` - regra de domínio (ex.: PVPS sem reason, snooze em vencido, saldo insuficiente).
+- `422 INVITATION_EXPIRED` - convite expirado no momento do aceite.
 
 ## 7) Ordem de implementação recomendada
 1. `GET /batches/pvps-suggestion` (acelera UX de saída).
@@ -139,3 +146,15 @@
 3. `GET /activity-feed`.
 4. Job de arquivamento + `/batches/history`.
 5. `/reports/losses` com agregações financeiras.
+
+
+## 8) Atualizacao 2026-05-10 - Onboarding e Convites
+- `POST /api/onboarding/bootstrap`
+  - Body: `{ organizationName, establishmentName }`
+  - Efeito: cria organizacao + estabelecimento + roles `admin`/`operador` + permissao das roles + vinculo do usuario autenticado como `admin`.
+- `GET /api/admin/roles?establishmentId=...`
+  - Lista roles da organizacao do estabelecimento (requer `admin.manage`).
+- `POST /api/admin/invitations`
+  - `roleId` pode ser omitido; fallback automatico para role `operador`.
+- `GET /api/invitations/pending`
+  - Lista convites pendentes para o email do usuario autenticado.

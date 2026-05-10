@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { DomainError } from "@/core/domain/domain-error";
 
 export class HttpError extends Error {
   constructor(
@@ -15,10 +16,11 @@ export class HttpError extends Error {
 export function jsonError(
   status: number,
   message: string,
-  details?: Record<string, unknown>,
+  details?: Record<string, unknown> & { code?: string },
 ) {
+  const { code, ...rest } = details ?? {};
   return NextResponse.json(
-    details ? { error: message, ...details } : { error: message },
+    details ? { code: code ?? "ERROR", message, error: message, ...rest } : { code: "ERROR", message, error: message },
     { status },
   );
 }
@@ -48,6 +50,13 @@ export function internalServerError(message = "Internal server error.") {
 }
 
 export function handleRouteError(error: unknown) {
+  if (error instanceof DomainError) {
+    return jsonError(error.status, error.message, {
+      code: error.code,
+      ...(error.details ?? {}),
+    });
+  }
+
   if (error instanceof HttpError) {
     return jsonError(error.status, error.message, error.details);
   }

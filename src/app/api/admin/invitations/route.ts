@@ -8,7 +8,7 @@ import { z } from "zod";
 const createInvitationSchema = z.object({
   establishmentId: z.string().uuid(),
   email: z.string().email(),
-  roleId: z.string().uuid(),
+  roleId: z.string().uuid().optional(),
   expiresAt: z.string().datetime().optional(),
 });
 
@@ -48,12 +48,39 @@ export async function POST(request: NextRequest) {
     if (!auth.session) return unauthorized();
 
     const client = createSupabaseServerClient({ accessToken: auth.session.accessToken });
+    const { data: establishment, error: establishmentError } = await client
+      .from("establishments")
+      .select("organization_id")
+      .eq("id", payload.establishmentId)
+      .single();
+    if (establishmentError) return internalServerError();
+
+    const organizationId = String((establishment as { organization_id?: string } | null)?.organization_id ?? "");
+    if (!organizationId) return internalServerError();
+
+    let roleId = payload.roleId;
+    if (!roleId) {
+      const { data: operatorRole, error: roleError } = await client
+        .from("roles")
+        .select("id")
+        .eq("organization_id", organizationId)
+        .eq("name", "operador")
+        .maybeSingle();
+      if (roleError) return internalServerError();
+      if (!operatorRole) {
+        return badRequest("Operator role not found for this organization.");
+      }
+      roleId = String((operatorRole as { id?: string } | null)?.id ?? "");
+    }
+
+    if (!roleId) return badRequest("Missing roleId for invitation.");
+
     const { data, error } = await client
       .from("establishment_invitations")
       .insert({
         establishment_id: payload.establishmentId,
         email: payload.email.toLowerCase(),
-        role_id: payload.roleId,
+        role_id: roleId,
         status: "pending",
         invited_by: auth.session.userId,
         expires_at: payload.expiresAt ?? null,
@@ -70,7 +97,7 @@ export async function POST(request: NextRequest) {
       actorUserId: auth.session.userId,
       payload: {
         email: payload.email.toLowerCase(),
-        roleId: payload.roleId,
+        roleId,
         expiresAt: payload.expiresAt ?? null,
       },
     });

@@ -174,3 +174,11 @@ x-user-id: {{adminUserId}}
   "establishmentId": "{{establishmentId}}",
   "invitationId": "00000000-0000-0000-0000-000000000901"
 }
+
+### Accept Invitation (authenticated invited user)
+POST {{baseUrl}}/api/admin/invitations/accept
+Content-Type: application/json
+
+{
+  "invitationId": "00000000-0000-0000-0000-000000000901"
+}

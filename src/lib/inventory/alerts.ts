@@ -1,5 +1,8 @@
+import { compareIsoDate, getTodayInOperationTimezone } from "@/lib/time/business-date";
+
 export function isExpired(expiryDate: string, now = new Date()): boolean {
-  return new Date(expiryDate).getTime() <= now.getTime();
+  const todayDateIso = getTodayInOperationTimezone(now);
+  return compareIsoDate(expiryDate, todayDateIso) <= 0;
 }
 
 export function computeSnoozedUntil(hours: 24 | 48, now = new Date()): string {

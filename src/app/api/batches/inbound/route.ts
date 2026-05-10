@@ -14,7 +14,7 @@ const inboundSchema = z.object({
   lotCode: z.string().min(1),
   expiryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   quantity: z.number().positive(),
-  costPrice: z.number().nonnegative(),
+  costPrice: z.number().nonnegative().optional(),
   locationId: z.string().optional(),
   actorUserId: z.string().uuid().optional(),
 });
@@ -28,7 +28,8 @@ export async function POST(request: NextRequest) {
       permission: "movements.write",
     });
     if (auth.response) return auth.response;
-  if (!auth.session) return unauthorized();
+    if (!auth.session) return unauthorized();
+    const normalizedCostPrice = payload.costPrice ?? 0;
 
     const client = createSupabaseServerClient({ accessToken: auth.session.accessToken });
     const useCase = new RegisterInboundUseCase(
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest) {
     );
     const result = await useCase.execute({
       ...payload,
+      costPrice: normalizedCostPrice,
       actorUserId: auth.session.userId,
     });
     await new SupabaseAuditLogsRepository(client).create({
@@ -50,7 +52,7 @@ export async function POST(request: NextRequest) {
         lotCode: payload.lotCode,
         expiryDate: payload.expiryDate,
         quantity: payload.quantity,
-        costPrice: payload.costPrice,
+        costPrice: normalizedCostPrice,
         locationId: payload.locationId ?? null,
       },
     });
