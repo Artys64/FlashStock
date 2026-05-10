@@ -85,6 +85,12 @@ function formatDelta(value: number): string {
   return `${value > 0 ? "+" : ""}${value}`;
 }
 
+function deltaTone(value: number): "up" | "down" | "neutral" {
+  if (value > 0) return "up";
+  if (value < 0) return "down";
+  return "neutral";
+}
+
 export default function BatchesPage() {
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [establishmentId, setEstablishmentId] = useState("");
@@ -125,6 +131,7 @@ export default function BatchesPage() {
     replenishment: 0,
   });
   const dashboardSnapshotRef = useRef<DashboardSummary | null>(null);
+  const quickSearchRef = useRef<HTMLInputElement | null>(null);
 
   const selectedEstablishment = useMemo(
     () => establishments.find((item) => item.id === establishmentId) ?? null,
@@ -149,6 +156,11 @@ export default function BatchesPage() {
     });
   }, [batches, searchTerm]);
 
+  function resetDashboardTrend() {
+    dashboardSnapshotRef.current = null;
+    setDashboardDelta({ critical: 0, warning: 0, replenishment: 0 });
+  }
+
   useEffect(() => {
     async function loadEstablishments() {
       setInitialLoading(true);
@@ -159,7 +171,10 @@ export default function BatchesPage() {
         if (!response.ok) throw new Error(body.error ?? "Falha ao carregar estabelecimentos.");
         const data = (body.data ?? []) as Establishment[];
         setEstablishments(data);
-        if (data.length > 0) setEstablishmentId(data[0].id);
+        if (data.length > 0) {
+          resetDashboardTrend();
+          setEstablishmentId(data[0].id);
+        }
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : "Falha ao carregar estabelecimentos.");
       } finally {
@@ -182,11 +197,6 @@ export default function BatchesPage() {
     }
     loadProducts();
   }, [selectedEstablishment]);
-
-  useEffect(() => {
-    dashboardSnapshotRef.current = null;
-    setDashboardDelta({ critical: 0, warning: 0, replenishment: 0 });
-  }, [establishmentId]);
 
   useEffect(() => {
     async function loadDashboard() {
@@ -215,6 +225,27 @@ export default function BatchesPage() {
     }
     loadDashboard();
   }, [establishmentId]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName.toLowerCase();
+      const isTypingField =
+        tag === "input" || tag === "textarea" || tag === "select" || target?.isContentEditable;
+
+      if (event.key === "/" && !event.ctrlKey && !event.metaKey && !event.altKey && !isTypingField) {
+        event.preventDefault();
+        quickSearchRef.current?.focus();
+      }
+
+      if (event.key === "Escape" && selectedBatchId) {
+        setSelectedBatchId("");
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedBatchId]);
 
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
@@ -469,7 +500,10 @@ export default function BatchesPage() {
               <select
                 className={styles.select}
                 value={establishmentId}
-                onChange={(e) => setEstablishmentId(e.target.value)}
+                onChange={(e) => {
+                  resetDashboardTrend();
+                  setEstablishmentId(e.target.value);
+                }}
                 disabled={initialLoading || establishments.length === 0}
               >
                 {establishments.length === 0 ? (
@@ -486,6 +520,7 @@ export default function BatchesPage() {
               Busca rapida
               <input
                 className={styles.input}
+                ref={quickSearchRef}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Lote, produto, SKU ou status"
@@ -498,6 +533,15 @@ export default function BatchesPage() {
             </button>
             <button className={styles.buttonSecondary} type="button" onClick={resetFilters}>
               Limpar filtros
+            </button>
+            <button
+              className={styles.buttonSecondary}
+              type="button"
+              onClick={() => {
+                window.location.href = "/history";
+              }}
+            >
+              Historico
             </button>
             <button className={styles.buttonSecondary} onClick={logout} type="button">
               Sair
@@ -533,17 +577,23 @@ export default function BatchesPage() {
           <article className={`${styles.semaphoreCard} ${styles.critical}`}>
             <p>Critico</p>
             <strong>{dashboard.critical}</strong>
-            <small>{formatDelta(dashboardDelta.critical)} desde a ultima leitura</small>
+            <small className={styles[`delta_${deltaTone(dashboardDelta.critical)}`]}>
+              {formatDelta(dashboardDelta.critical)} desde a ultima leitura
+            </small>
           </article>
           <article className={`${styles.semaphoreCard} ${styles.warning}`}>
             <p>Atencao</p>
             <strong>{dashboard.warning}</strong>
-            <small>{formatDelta(dashboardDelta.warning)} desde a ultima leitura</small>
+            <small className={styles[`delta_${deltaTone(dashboardDelta.warning)}`]}>
+              {formatDelta(dashboardDelta.warning)} desde a ultima leitura
+            </small>
           </article>
           <article className={`${styles.semaphoreCard} ${styles.replenish}`}>
             <p>Reposicao</p>
             <strong>{dashboard.replenishment}</strong>
-            <small>{formatDelta(dashboardDelta.replenishment)} desde a ultima leitura</small>
+            <small className={styles[`delta_${deltaTone(dashboardDelta.replenishment)}`]}>
+              {formatDelta(dashboardDelta.replenishment)} desde a ultima leitura
+            </small>
           </article>
         </section>
 

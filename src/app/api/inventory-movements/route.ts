@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
   const page = parsePositiveInt(params.get("page"), 1);
   const pageSize = Math.min(parsePositiveInt(params.get("pageSize"), 20), 100);
   const movementType = params.get("movementType");
+  const batchId = params.get("batchId");
   const from = params.get("from");
   const to = params.get("to");
 
@@ -42,6 +43,7 @@ export async function GET(request: NextRequest) {
     .range(fromIndex, toIndex);
 
   if (movementType) query = query.eq("movement_type", movementType);
+  if (batchId) query = query.eq("batch_id", batchId);
   if (from) query = query.gte("created_at", `${from}T00:00:00.000Z`);
   if (to) query = query.lte("created_at", `${to}T23:59:59.999Z`);
 

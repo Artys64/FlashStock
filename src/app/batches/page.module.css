@@ -28,6 +28,7 @@
   border-radius: 14px;
   padding: 18px;
   box-shadow: 0 8px 30px rgba(22, 34, 49, 0.06);
+  animation: cardIn 280ms ease both;
 }
 
 .headerTop {
@@ -162,8 +163,19 @@
 }
 
 .semaphoreCard small {
-  color: #4f667d;
   font-size: 0.8rem;
+}
+
+.delta_up {
+  color: #9f1239;
+}
+
+.delta_down {
+  color: #166534;
+}
+
+.delta_neutral {
+  color: #4f667d;
 }
 
 .critical {
@@ -209,10 +221,12 @@
 
 .table tbody tr {
   cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
 }
 
 .table tbody tr:hover {
   background: #f6f9fc;
+  transform: translateX(1px);
 }
 
 .rowSelected {
@@ -278,6 +292,7 @@
   border-radius: 10px;
   padding: 10px 12px;
   background: #f9fcff;
+  animation: rowIn 220ms ease both;
 }
 
 .feedMessage {
@@ -391,6 +406,28 @@
 .diffTable td {
   border-bottom: 1px solid #e4ebf2;
   padding: 8px 6px;
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rowIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 720px) {

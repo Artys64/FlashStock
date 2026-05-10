@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
   const { data: archivedRows, error } = await client
     .from("batches")
-    .select("id, product_id, lot_code, expiry_date, quantity_current, cost_price, updated_at, archived_at")
+    .select("id, product_id, lot_code, expiry_date, quantity_current, cost_price, updated_at, archived_at, products(name, sku)")
     .eq("establishment_id", establishmentId)
     .eq("quantity_current", 0)
     .order("archived_at", { ascending: false, nullsFirst: false })

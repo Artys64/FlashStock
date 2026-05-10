@@ -25,10 +25,10 @@
 
 ## 2.3 Catálogo
 - `POST /api/categories`
-  - Body: `{ organizationId, name, leadTimeAlertDays }`
+  - Body: `{ establishmentId, organizationId, name, leadTimeAlertDays }`
 - `POST /api/products`
-  - Body: `{ organizationId, categoryId, sku, name, uom, minimumStock }`
-- `GET /api/products/list?organizationId=...`
+  - Body: `{ establishmentId, organizationId, categoryId, sku, name, uom, minimumStock }`
+- `GET /api/products/list?organizationId=...&establishmentId=...`
 
 ## 2.4 Lotes e movimentação
 - `POST /api/batches/inbound`

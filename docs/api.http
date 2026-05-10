@@ -18,7 +18,7 @@ Content-Type: application/json
   "name": "Empresa Exemplo"
 }
 
-### Create Establishment (admin.manage - currently not protected)
+### Create Establishment (admin.manage)
 POST {{baseUrl}}/api/establishments
 Content-Type: application/json
 
@@ -27,21 +27,23 @@ Content-Type: application/json
   "name": "Filial Centro"
 }
 
-### Create Category (admin.manage - currently not protected)
+### Create Category (inventory.write)
 POST {{baseUrl}}/api/categories
 Content-Type: application/json
 
 {
+  "establishmentId": "{{establishmentId}}",
   "organizationId": "{{organizationId}}",
   "name": "Laticinios",
   "leadTimeAlertDays": 5
 }
 
-### Create Product (admin.manage - currently not protected)
+### Create Product (inventory.write)
 POST {{baseUrl}}/api/products
 Content-Type: application/json
 
 {
+  "establishmentId": "{{establishmentId}}",
   "organizationId": "{{organizationId}}",
   "categoryId": "{{categoryId}}",
   "sku": "LEITE-INT-1L",
@@ -50,8 +52,8 @@ Content-Type: application/json
   "minimumStock": 20
 }
 
-### List Products (not protected)
-GET {{baseUrl}}/api/products/list?organizationId={{organizationId}}
+### List Products (inventory.read)
+GET {{baseUrl}}/api/products/list?organizationId={{organizationId}}&establishmentId={{establishmentId}}
 
 ### Register Inbound (movements.write)
 POST {{baseUrl}}/api/batches/inbound
@@ -131,3 +133,44 @@ x-user-id: {{operatorUserId}}
 ### Audit Logs (audit.read)
 GET {{baseUrl}}/api/audit-logs?establishmentId={{establishmentId}}&page=1&pageSize=20
 x-user-id: {{adminUserId}}
+
+### Admin Users (admin.manage)
+GET {{baseUrl}}/api/admin/users?establishmentId={{establishmentId}}
+x-user-id: {{adminUserId}}
+
+### Update User Role (admin.manage)
+PATCH {{baseUrl}}/api/admin/users
+Content-Type: application/json
+x-user-id: {{adminUserId}}
+
+{
+  "establishmentId": "{{establishmentId}}",
+  "userId": "{{operatorUserId}}",
+  "roleId": "00000000-0000-0000-0000-000000000900"
+}
+
+### Admin Invitations (admin.manage)
+GET {{baseUrl}}/api/admin/invitations?establishmentId={{establishmentId}}
+x-user-id: {{adminUserId}}
+
+### Create Invitation (admin.manage)
+POST {{baseUrl}}/api/admin/invitations
+Content-Type: application/json
+x-user-id: {{adminUserId}}
+
+{
+  "establishmentId": "{{establishmentId}}",
+  "email": "operador@example.com",
+  "roleId": "00000000-0000-0000-0000-000000000900",
+  "expiresAt": "2026-12-31T23:59:59.000Z"
+}
+
+### Revoke Invitation (admin.manage)
+PATCH {{baseUrl}}/api/admin/invitations
+Content-Type: application/json
+x-user-id: {{adminUserId}}
+
+{
+  "establishmentId": "{{establishmentId}}",
+  "invitationId": "00000000-0000-0000-0000-000000000901"
+}

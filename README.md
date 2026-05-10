@@ -86,7 +86,7 @@ npm run dev
 
 ## Ordem sugerida de execução
 
-1. Migrations `0001`, `0002`, `0003`
+1. Migrations `0001` até `0007`
 2. `supabase/seeds/0001_rbac_seed.sql`
 3. `supabase/seeds/0002_sample_inventory.sql`
 
