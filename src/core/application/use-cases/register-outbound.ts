@@ -2,14 +2,14 @@
   pickPvpsBatch,
   requiresReasonCodeForNonPvps,
   validateReasonCode,
-} from "../../domain/rules";
-import { DomainError } from "../../domain/domain-error";
-import type { ReasonCode } from "../../domain/types";
+} from "../../domain/rules.ts";
+import { DomainError } from "../../domain/domain-error.ts";
+import type { ReasonCode } from "../../domain/types.ts";
 import type {
   BatchesRepository,
   InventoryMovementsRepository,
-} from "../../ports/repositories";
-import { compareIsoDate, getTodayInOperationTimezone } from "../../../lib/time/business-date";
+} from "../../ports/repositories.ts";
+import { compareIsoDate, getTodayInOperationTimezone } from "../../../lib/time/business-date.ts";
 
 export interface RegisterOutboundInput {
   establishmentId: string;
@@ -100,36 +100,20 @@ export class RegisterOutboundUseCase {
       }
     }
 
-    if (this.movementsRepository.registerOutboundAtomic) {
-      await this.movementsRepository.registerOutboundAtomic({
-        establishmentId: input.establishmentId,
-        productId: input.productId,
-        selectedBatchId: selectedBatch.id,
-        quantity: input.quantity,
-        movementType: input.movementType,
-        reasonCode: input.reasonCode,
-        actorUserId: input.actorUserId,
-      });
-      return;
-    }
-
-    const newQuantity = selectedBatch.quantityCurrent - input.quantity;
-    try {
-      await this.batchesRepository.updateQuantity(selectedBatch.id, newQuantity);
-    } catch {
+    if (!this.movementsRepository.registerOutboundAtomic) {
       throw new DomainError(
-        "OPTIMISTIC_CONCURRENCY_CONFLICT",
-        409,
-        "Stock changed concurrently. Please refresh and try again.",
+        "OPERATION_NOT_SUPPORTED",
+        500,
+        "Atomic outbound registration is required but not available in the current repository.",
       );
     }
-    await this.movementsRepository.create({
+
+    await this.movementsRepository.registerOutboundAtomic({
       establishmentId: input.establishmentId,
-      batchId: selectedBatch.id,
       productId: input.productId,
-      movementType: input.movementType,
+      selectedBatchId: selectedBatch.id,
       quantity: input.quantity,
-      unitCost: selectedBatch.costPrice,
+      movementType: input.movementType,
       reasonCode: input.reasonCode,
       actorUserId: input.actorUserId,
     });

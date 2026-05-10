@@ -1,5 +1,5 @@
-﻿import { DomainError } from "../../domain/domain-error";
-import type { BatchesRepository, InventoryMovementsRepository } from "../../ports/repositories";
+﻿import { DomainError } from "../../domain/domain-error.ts";
+import type { BatchesRepository, InventoryMovementsRepository } from "../../ports/repositories.ts";
 
 export interface RegisterInboundInput {
   establishmentId: string;
@@ -34,41 +34,24 @@ export class RegisterInboundUseCase {
     }
     const normalizedCostPrice = input.costPrice ?? 0;
 
-    if (this.movementsRepository.registerInboundAtomic) {
-      return this.movementsRepository.registerInboundAtomic({
-        establishmentId: input.establishmentId,
-        productId: input.productId,
-        lotCode: input.lotCode,
-        expiryDate: input.expiryDate,
-        quantity: input.quantity,
-        costPrice: normalizedCostPrice,
-        locationId: input.locationId,
-        actorUserId: input.actorUserId,
-      });
+    if (!this.movementsRepository.registerInboundAtomic) {
+      throw new DomainError(
+        "OPERATION_NOT_SUPPORTED",
+        500,
+        "Atomic inbound registration is required but not available in the current repository.",
+      );
     }
 
-    const batch = await this.batchesRepository.create({
+    return this.movementsRepository.registerInboundAtomic({
       establishmentId: input.establishmentId,
       productId: input.productId,
       lotCode: input.lotCode,
       expiryDate: input.expiryDate,
-      quantityCurrent: input.quantity,
+      quantity: input.quantity,
       costPrice: normalizedCostPrice,
       locationId: input.locationId,
-      quarantined: false,
-    });
-
-    await this.movementsRepository.create({
-      establishmentId: input.establishmentId,
-      batchId: batch.id,
-      productId: input.productId,
-      movementType: "entry_purchase",
-      quantity: input.quantity,
-      unitCost: normalizedCostPrice,
       actorUserId: input.actorUserId,
     });
-
-    return { batchId: batch.id };
   }
 }
 

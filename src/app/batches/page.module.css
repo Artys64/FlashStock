@@ -646,6 +646,65 @@
   gap: 8px;
 }
 
+.drawerTabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.drawerTab {
+  border: 1px solid #c4d4e3;
+  border-radius: 10px;
+  padding: 7px 11px;
+  background: #f5f9fd;
+  color: #24415a;
+  font-size: 0.83rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.drawerTab:hover {
+  background: #edf4fb;
+}
+
+.drawerTabActive {
+  border-color: #1f6cb2;
+  background: #e8f2fd;
+  color: #0f3f6b;
+}
+
+.drawerTabDanger {
+  composes: drawerTab;
+  border-color: #e4b4b4;
+  color: #8f1111;
+}
+
+.drawerTabDanger:hover {
+  background: #fff0f0;
+}
+
+.drawerTabDangerActive {
+  border-color: #b91c1c;
+  background: #fee2e2;
+  color: #7f1d1d;
+}
+
+.buttonDanger {
+  composes: button;
+  background: linear-gradient(135deg, #991b1b, #b91c1c);
+}
+
+.buttonDanger:hover {
+  transform: translateY(-1px);
+}
+
+.buttonDanger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .danger {
   color: #8f1111;
   font-size: 0.9rem;

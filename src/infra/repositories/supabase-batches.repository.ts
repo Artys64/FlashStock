@@ -1,5 +1,6 @@
 import { BatchesRepository } from "@/core/ports/repositories";
 import { Batch } from "@/core/domain/types";
+import { DomainError } from "@/core/domain/domain-error";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 function mapBatch(row: Record<string, unknown>): Batch {
@@ -87,6 +88,6 @@ export class SupabaseBatchesRepository implements BatchesRepository {
       .select("id")
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (!updated) throw new Error("Optimistic concurrency conflict.");
+    if (!updated) throw new DomainError("OPTIMISTIC_CONCURRENCY_CONFLICT", 409, "Stock changed concurrently. Please refresh and try again.");
   }
 }

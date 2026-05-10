@@ -120,3 +120,45 @@ test("computeBatchStatus marks expired with date boundary in operation day", () 
   assert.equal(status, "expired");
 });
 
+test("computeBatchStatus marks zero-quantity expired batch as expired, not active", () => {
+  const status = computeBatchStatus({
+    batch: {
+      expiryDate: "2026-05-01",
+      quantityCurrent: 0,
+      quarantined: false,
+    },
+    leadTimeAlertDays: 7,
+    todayDateIso: "2026-05-10",
+  });
+
+  assert.equal(status, "expired");
+});
+
+test("computeBatchStatus marks zero-quantity alert batch as alert, not active", () => {
+  const status = computeBatchStatus({
+    batch: {
+      expiryDate: "2026-05-14",
+      quantityCurrent: 0,
+      quarantined: false,
+    },
+    leadTimeAlertDays: 7,
+    todayDateIso: "2026-05-10",
+  });
+
+  assert.equal(status, "alert");
+});
+
+test("computeBatchStatus marks zero-quantity valid batch as active", () => {
+  const status = computeBatchStatus({
+    batch: {
+      expiryDate: "2026-06-01",
+      quantityCurrent: 0,
+      quarantined: false,
+    },
+    leadTimeAlertDays: 7,
+    todayDateIso: "2026-05-10",
+  });
+
+  assert.equal(status, "active");
+});
+

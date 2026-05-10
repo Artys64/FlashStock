@@ -295,6 +295,21 @@ export default function BatchesPage() {
   const [catalogSuccess, setCatalogSuccess] = useState("");
   const [creatingProduct, setCreatingProduct] = useState(false);
   const [creatingInboundBatch, setCreatingInboundBatch] = useState(false);
+  const [drawerPanel, setDrawerPanel] = useState<"edit" | "outbound" | "inbound" | "delete">("edit");
+  const [outboundQty, setOutboundQty] = useState("");
+  const [outboundType, setOutboundType] = useState<"exit_sale" | "exit_loss" | "adjustment">("exit_sale");
+  const [outboundReason, setOutboundReason] = useState("");
+  const [outboundLoading, setOutboundLoading] = useState(false);
+  const [outboundError, setOutboundError] = useState("");
+  const [outboundSuccess, setOutboundSuccess] = useState("");
+  const [drawerInboundLotCode, setDrawerInboundLotCode] = useState("");
+  const [drawerInboundExpiry, setDrawerInboundExpiry] = useState("");
+  const [drawerInboundQty, setDrawerInboundQty] = useState("");
+  const [drawerInboundLoading, setDrawerInboundLoading] = useState(false);
+  const [drawerInboundError, setDrawerInboundError] = useState("");
+  const [drawerInboundSuccess, setDrawerInboundSuccess] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const dashboardSnapshotRef = useRef<DashboardSummary | null>(null);
   const quickSearchRef = useRef<HTMLInputElement | null>(null);
   const alertPreferencesKeyRef = useRef("");
@@ -971,6 +986,98 @@ export default function BatchesPage() {
       setAlertPreferencesMessage("Falha ao salvar preferencias.");
     } finally {
       setAlertPreferencesSaving(false);
+    }
+  }
+
+  async function handleOutbound(event: FormEvent) {
+    event.preventDefault();
+    if (!selectedBatch?.products) return;
+    const qty = parsePtBrNumber(outboundQty);
+    if (!qty || qty <= 0) return;
+    setOutboundLoading(true);
+    setOutboundError("");
+    setOutboundSuccess("");
+    try {
+      const payload: Record<string, unknown> = {
+        establishmentId,
+        productId: selectedBatch.products.id,
+        selectedBatchId: selectedBatch.id,
+        quantity: qty,
+        movementType: outboundType,
+      };
+      if (outboundReason) payload.reasonCode = outboundReason;
+      const response = await fetch("/api/batches/outbound", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error ?? "Erro ao registrar saida.");
+      setOutboundSuccess("Baixa registrada com sucesso.");
+      setOutboundQty("");
+      setOutboundReason("");
+      await Promise.all([loadBatches(), refreshDashboardSummary(), loadAlerts()]);
+    } catch (err) {
+      setOutboundError(err instanceof Error ? err.message : "Erro ao registrar saida.");
+    } finally {
+      setOutboundLoading(false);
+    }
+  }
+
+  async function handleDrawerInbound(event: FormEvent) {
+    event.preventDefault();
+    if (!selectedBatch?.products) return;
+    const qty = parsePtBrNumber(drawerInboundQty);
+    if (!qty || qty <= 0 || !drawerInboundLotCode || !drawerInboundExpiry) return;
+    setDrawerInboundLoading(true);
+    setDrawerInboundError("");
+    setDrawerInboundSuccess("");
+    try {
+      const response = await fetch("/api/batches/inbound", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          establishmentId,
+          productId: selectedBatch.products.id,
+          lotCode: drawerInboundLotCode,
+          expiryDate: drawerInboundExpiry,
+          quantity: qty,
+        }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error ?? "Erro ao registrar entrada.");
+      setDrawerInboundSuccess("Entrada registrada com sucesso.");
+      setDrawerInboundLotCode("");
+      setDrawerInboundExpiry("");
+      setDrawerInboundQty("");
+      await Promise.all([loadBatches(), refreshDashboardSummary(), loadAlerts()]);
+    } catch (err) {
+      setDrawerInboundError(err instanceof Error ? err.message : "Erro ao registrar entrada.");
+    } finally {
+      setDrawerInboundLoading(false);
+    }
+  }
+
+  async function handleDeleteBatch() {
+    if (!selectedBatch) return;
+    setDeleteLoading(true);
+    setDeleteError("");
+    try {
+      const response = await fetch(
+        `/api/batches/${selectedBatch.id}?establishmentId=${establishmentId}`,
+        { method: "DELETE", credentials: "include" },
+      );
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error ?? "Erro ao excluir lote.");
+      setSelectedBatchId("");
+      setDrawerPanel("edit");
+      await Promise.all([loadBatches(), refreshDashboardSummary(), loadAlerts()]);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "Erro ao excluir lote.");
+    } finally {
+      setDeleteLoading(false);
     }
   }
 
@@ -1691,6 +1798,7 @@ export default function BatchesPage() {
                         setSelectedBatchId(batch.id);
                         setQuarantined(String(batch.quarantined));
                         setExpiryDate(batch.expiry_date);
+                        setDrawerPanel("edit");
                       }}
                     >
                       <div className={styles.priorityMain}>
@@ -1787,6 +1895,7 @@ export default function BatchesPage() {
                             setSelectedBatchId(batch.id);
                             setQuarantined(String(batch.quarantined));
                             setExpiryDate(batch.expiry_date);
+                            setDrawerPanel("edit");
                           }}
                         >
                           <td>{batch.lot_code}</td>
@@ -1965,6 +2074,7 @@ export default function BatchesPage() {
                           setSelectedBatchId(batch.id);
                           setQuarantined(String(batch.quarantined));
                           setExpiryDate(batch.expiryDate);
+                          setDrawerPanel("edit");
                         }}
                       >
                         <div className={styles.priorityMain}>
@@ -2097,46 +2207,234 @@ export default function BatchesPage() {
             Fechar
           </button>
         </div>
-        <p className={styles.sectionHint}>Edite quarentena, validade e alerta do lote selecionado.</p>
-        <form onSubmit={updateBatch} className={styles.drawerForm}>
-          <label className={styles.field}>
-            Lote selecionado
-            <input className={styles.input} value={selectedBatch?.lot_code ?? ""} readOnly />
-          </label>
-          <label className={styles.field}>
-            Quarentena
-            <select className={styles.select} value={quarantined} onChange={(e) => setQuarantined(e.target.value)}>
-              <option value="false">Nao</option>
-              <option value="true">Sim</option>
-            </select>
-          </label>
-          <label className={styles.field}>
-            Validade
-            <input
-              className={styles.input}
-              type="date"
-              value={expiryDate}
-              onChange={(e) => setExpiryDate(e.target.value)}
-            />
-          </label>
-          <label className={styles.field}>
-            Snooze de alerta
-            <select className={styles.select} value={snoozeHours} onChange={(e) => setSnoozeHours(e.target.value as "24" | "48")}>
-              <option value="24">24 horas</option>
-              <option value="48">48 horas</option>
-            </select>
-          </label>
-          <div className={styles.drawerActions}>
-            <button className={styles.button} type="submit" disabled={!selectedBatch}>
-              Salvar alteracoes
-            </button>
-            <button className={styles.buttonSecondary} type="button" disabled={!selectedBatch} onClick={snoozeSelectedBatch}>
-              Silenciar alerta
-            </button>
-          </div>
-          {error ? <p className={styles.stateError}>{error}</p> : null}
-          {success ? <p className={styles.stateSuccess}>{success}</p> : null}
-        </form>
+
+        <div className={styles.drawerTabs}>
+          <button
+            type="button"
+            className={`${styles.drawerTab} ${drawerPanel === "edit" ? styles.drawerTabActive : ""}`}
+            onClick={() => setDrawerPanel("edit")}
+          >
+            Editar
+          </button>
+          <button
+            type="button"
+            className={`${styles.drawerTab} ${drawerPanel === "outbound" ? styles.drawerTabActive : ""}`}
+            onClick={() => setDrawerPanel("outbound")}
+          >
+            Dar Baixa
+          </button>
+          <button
+            type="button"
+            className={`${styles.drawerTab} ${drawerPanel === "inbound" ? styles.drawerTabActive : ""}`}
+            onClick={() => setDrawerPanel("inbound")}
+          >
+            Entrada
+          </button>
+          <button
+            type="button"
+            className={`${styles.drawerTab} ${drawerPanel === "delete" ? styles.drawerTabDangerActive : styles.drawerTabDanger}`}
+            onClick={() => setDrawerPanel("delete")}
+          >
+            Excluir
+          </button>
+        </div>
+
+        {drawerPanel === "edit" ? (
+          <>
+            <p className={styles.sectionHint}>Edite quarentena, validade e alerta do lote selecionado.</p>
+            <form onSubmit={updateBatch} className={styles.drawerForm}>
+              <label className={styles.field}>
+                Lote selecionado
+                <input className={styles.input} value={selectedBatch?.lot_code ?? ""} readOnly />
+              </label>
+              <label className={styles.field}>
+                Quarentena
+                <select className={styles.select} value={quarantined} onChange={(e) => setQuarantined(e.target.value)}>
+                  <option value="false">Nao</option>
+                  <option value="true">Sim</option>
+                </select>
+              </label>
+              <label className={styles.field}>
+                Validade
+                <input
+                  className={styles.input}
+                  type="date"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                />
+              </label>
+              <label className={styles.field}>
+                Snooze de alerta
+                <select className={styles.select} value={snoozeHours} onChange={(e) => setSnoozeHours(e.target.value as "24" | "48")}>
+                  <option value="24">24 horas</option>
+                  <option value="48">48 horas</option>
+                </select>
+              </label>
+              <div className={styles.drawerActions}>
+                <button className={styles.button} type="submit" disabled={!selectedBatch}>
+                  Salvar alteracoes
+                </button>
+                <button className={styles.buttonSecondary} type="button" disabled={!selectedBatch} onClick={snoozeSelectedBatch}>
+                  Silenciar alerta
+                </button>
+              </div>
+              {error ? <p className={styles.stateError}>{error}</p> : null}
+              {success ? <p className={styles.stateSuccess}>{success}</p> : null}
+            </form>
+          </>
+        ) : null}
+
+        {drawerPanel === "outbound" ? (
+          <>
+            <p className={styles.sectionHint}>Registre uma saida de estoque para o lote selecionado.</p>
+            <form onSubmit={handleOutbound} className={styles.drawerForm}>
+              <label className={styles.field}>
+                Lote selecionado
+                <input className={styles.input} value={selectedBatch?.lot_code ?? ""} readOnly />
+              </label>
+              <label className={styles.field}>
+                Produto
+                <input className={styles.input} value={selectedBatch?.products?.name ?? ""} readOnly />
+              </label>
+              <label className={styles.field}>
+                Tipo de movimento
+                <select
+                  className={styles.select}
+                  value={outboundType}
+                  onChange={(e) => setOutboundType(e.target.value as "exit_sale" | "exit_loss" | "adjustment")}
+                >
+                  <option value="exit_sale">Saida por venda</option>
+                  <option value="exit_loss">Saida por perda</option>
+                  <option value="adjustment">Ajuste manual</option>
+                </select>
+              </label>
+              <label className={styles.field}>
+                Quantidade
+                <input
+                  className={styles.input}
+                  inputMode="decimal"
+                  placeholder="0"
+                  value={outboundQty}
+                  onChange={(e) => setOutboundQty(maskQuantityInput(e.target.value))}
+                />
+              </label>
+              <label className={styles.field}>
+                Motivo (opcional)
+                <select
+                  className={styles.select}
+                  value={outboundReason}
+                  onChange={(e) => setOutboundReason(e.target.value)}
+                >
+                  <option value="">Sem motivo especifico</option>
+                  <option value="damaged_old_batch">Lote danificado / antigo</option>
+                  <option value="customer_specific_batch">Lote especifico do cliente</option>
+                  <option value="quality_issue">Problema de qualidade</option>
+                  <option value="manual_adjustment">Ajuste manual</option>
+                </select>
+              </label>
+              <div className={styles.drawerActions}>
+                <button className={styles.button} type="submit" disabled={outboundLoading || !selectedBatch}>
+                  {outboundLoading ? "Registrando..." : "Registrar Baixa"}
+                </button>
+              </div>
+              {outboundError ? <p className={styles.stateError}>{outboundError}</p> : null}
+              {outboundSuccess ? <p className={styles.stateSuccess}>{outboundSuccess}</p> : null}
+            </form>
+          </>
+        ) : null}
+
+        {drawerPanel === "inbound" ? (
+          <>
+            <p className={styles.sectionHint}>Registre uma nova entrada de estoque para o produto deste lote.</p>
+            <form onSubmit={handleDrawerInbound} className={styles.drawerForm}>
+              <label className={styles.field}>
+                Produto
+                <input className={styles.input} value={selectedBatch?.products?.name ?? ""} readOnly />
+              </label>
+              <label className={styles.field}>
+                Codigo do lote
+                <input
+                  className={styles.input}
+                  placeholder="Ex: LOT-2026-001"
+                  value={drawerInboundLotCode}
+                  onChange={(e) => setDrawerInboundLotCode(e.target.value)}
+                />
+              </label>
+              <label className={styles.field}>
+                Validade
+                <input
+                  className={styles.input}
+                  type="date"
+                  value={drawerInboundExpiry}
+                  onChange={(e) => setDrawerInboundExpiry(e.target.value)}
+                />
+              </label>
+              <label className={styles.field}>
+                Quantidade
+                <input
+                  className={styles.input}
+                  inputMode="decimal"
+                  placeholder="0"
+                  value={drawerInboundQty}
+                  onChange={(e) => setDrawerInboundQty(maskQuantityInput(e.target.value))}
+                />
+              </label>
+              <div className={styles.drawerActions}>
+                <button
+                  className={styles.button}
+                  type="submit"
+                  disabled={
+                    drawerInboundLoading ||
+                    !drawerInboundLotCode ||
+                    !drawerInboundExpiry ||
+                    !parsePtBrNumber(drawerInboundQty)
+                  }
+                >
+                  {drawerInboundLoading ? "Registrando..." : "Registrar Entrada"}
+                </button>
+              </div>
+              {drawerInboundError ? <p className={styles.stateError}>{drawerInboundError}</p> : null}
+              {drawerInboundSuccess ? <p className={styles.stateSuccess}>{drawerInboundSuccess}</p> : null}
+            </form>
+          </>
+        ) : null}
+
+        {drawerPanel === "delete" ? (
+          <>
+            <p className={styles.sectionHint}>Esta acao arquiva o lote e nao pode ser desfeita facilmente.</p>
+            <div className={styles.drawerForm}>
+              <label className={styles.field}>
+                Lote a excluir
+                <input className={styles.input} value={selectedBatch?.lot_code ?? ""} readOnly />
+              </label>
+              <label className={styles.field}>
+                Produto
+                <input className={styles.input} value={selectedBatch?.products?.name ?? ""} readOnly />
+              </label>
+              <p className={styles.stateError}>
+                O lote sera arquivado permanentemente. Movimentacoes historicas sao preservadas.
+              </p>
+              <div className={styles.drawerActions}>
+                <button
+                  className={styles.buttonDanger}
+                  type="button"
+                  disabled={deleteLoading || !selectedBatch}
+                  onClick={handleDeleteBatch}
+                >
+                  {deleteLoading ? "Excluindo..." : "Confirmar Exclusao"}
+                </button>
+                <button
+                  className={styles.buttonSecondary}
+                  type="button"
+                  onClick={() => setDrawerPanel("edit")}
+                >
+                  Cancelar
+                </button>
+              </div>
+              {deleteError ? <p className={styles.stateError}>{deleteError}</p> : null}
+            </div>
+          </>
+        ) : null}
       </aside>
 
       {conflict ? (

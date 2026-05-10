@@ -1,9 +1,9 @@
-﻿import type { Batch, BatchStatus, ReasonCode } from "./types";
+﻿import type { Batch, BatchStatus, ReasonCode } from "./types.ts";
 import {
   compareIsoDate,
   diffDaysIsoDate,
   getTodayInOperationTimezone,
-} from "../../lib/time/business-date";
+} from "../../lib/time/business-date.ts";
 
 export function pickPvpsBatch(
   batches: Batch[],
@@ -50,7 +50,6 @@ export function computeBatchStatus(input: {
   const { batch, leadTimeAlertDays } = input;
   const todayDateIso = input.todayDateIso ?? getTodayInOperationTimezone();
   if (batch.quarantined) return "quarantine";
-  if (batch.quantityCurrent <= 0) return "active";
   const daysUntilExpiry = diffDaysIsoDate(todayDateIso, batch.expiryDate);
 
   if (daysUntilExpiry <= 0) return "expired";

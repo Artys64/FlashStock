@@ -166,6 +166,56 @@ export async function PATCH(
   }
 }
 
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ batchId: string }> },
+) {
+  try {
+    const { batchId } = await context.params;
+    const { searchParams } = new URL(request.url);
+    const establishmentId = searchParams.get("establishmentId");
+    if (!establishmentId) {
+      return NextResponse.json({ error: "establishmentId is required." }, { status: 400 });
+    }
+
+    const auth = await authorizeRequest({
+      request,
+      establishmentId,
+      permission: "inventory.write",
+    });
+    if (auth.response) return auth.response;
+    if (!auth.session) return unauthorized();
+
+    const client = createSupabaseServerClient({ accessToken: auth.session.accessToken });
+    const auditLogsRepository = new SupabaseAuditLogsRepository(client);
+
+    const { data, error } = await client
+      .from("batches")
+      .update({ archived_at: new Date().toISOString() })
+      .eq("id", batchId)
+      .eq("establishment_id", establishmentId)
+      .is("archived_at", null)
+      .select("id")
+      .maybeSingle();
+
+    if (error) return internalServerError();
+    if (!data) return NextResponse.json({ error: "Batch not found." }, { status: 404 });
+
+    await auditLogsRepository.create({
+      establishmentId,
+      entityType: "batch",
+      entityId: batchId,
+      action: "batch_deleted",
+      actorUserId: auth.session.userId,
+      payload: {},
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return handleRouteError(error);
+  }
+}
+
 
 
 
