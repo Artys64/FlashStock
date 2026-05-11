@@ -1,5 +1,5 @@
-﻿import { DomainError } from "../../domain/domain-error.ts";
-import type { BatchesRepository, InventoryMovementsRepository } from "../../ports/repositories.ts";
+import { DomainError } from "../../domain/domain-error";
+import type { BatchesRepository, InventoryMovementsRepository } from "../../ports/repositories";
 
 export interface RegisterInboundInput {
   establishmentId: string;

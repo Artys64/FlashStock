@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { resolveAutoMilestones, shouldTriggerAlertMilestone } from "./notification-rules.ts";
+import { resolveAutoMilestones, shouldTriggerAlertMilestone } from "./notification-rules";
 
 test("resolveAutoMilestones returns long-range profile for 180+ days", () => {
   assert.deepEqual(resolveAutoMilestones(180), [30, 15, 7, 1]);

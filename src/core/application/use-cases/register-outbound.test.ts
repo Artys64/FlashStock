@@ -1,9 +1,9 @@
-﻿import assert from "node:assert/strict";
+import assert from "node:assert/strict";
 import test from "node:test";
-import { DomainError } from "../../domain/domain-error.ts";
-import type { Batch, InventoryMovement } from "../../domain/types.ts";
-import type { BatchesRepository, InventoryMovementsRepository } from "../../ports/repositories.ts";
-import { RegisterOutboundUseCase } from "./register-outbound.ts";
+import { DomainError } from "../../domain/domain-error";
+import type { Batch, InventoryMovement } from "../../domain/types";
+import type { BatchesRepository, InventoryMovementsRepository } from "../../ports/repositories";
+import { RegisterOutboundUseCase } from "./register-outbound";
 
 class InMemoryBatchesRepository implements BatchesRepository {
   private readonly batches: Batch[];

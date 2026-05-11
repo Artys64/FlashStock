@@ -1,6 +1,6 @@
-﻿import assert from "node:assert/strict";
+import assert from "node:assert/strict";
 import test from "node:test";
-import { computeBatchStatus, pickPvpsBatch } from "./rules.ts";
+import { computeBatchStatus, pickPvpsBatch } from "./rules";
 
 test("pickPvpsBatch ignores quarantined, zero quantity and expired for regular flow", () => {
   const result = pickPvpsBatch(

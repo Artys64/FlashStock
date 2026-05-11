@@ -1,15 +1,15 @@
-﻿import {
+import {
   pickPvpsBatch,
   requiresReasonCodeForNonPvps,
   validateReasonCode,
-} from "../../domain/rules.ts";
-import { DomainError } from "../../domain/domain-error.ts";
-import type { ReasonCode } from "../../domain/types.ts";
+} from "../../domain/rules";
+import { DomainError } from "../../domain/domain-error";
+import type { ReasonCode } from "../../domain/types";
 import type {
   BatchesRepository,
   InventoryMovementsRepository,
-} from "../../ports/repositories.ts";
-import { compareIsoDate, getTodayInOperationTimezone } from "../../../lib/time/business-date.ts";
+} from "../../ports/repositories";
+import { compareIsoDate, getTodayInOperationTimezone } from "../../../lib/time/business-date";
 
 export interface RegisterOutboundInput {
   establishmentId: string;

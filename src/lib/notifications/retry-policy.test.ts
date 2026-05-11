@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { computeNextRetryAt, MAX_EMAIL_RETRY_ATTEMPTS } from "./retry-policy.ts";
+import { computeNextRetryAt, MAX_EMAIL_RETRY_ATTEMPTS } from "./retry-policy";
 
 test("computeNextRetryAt applies escalating backoff", () => {
   const base = new Date("2026-05-10T12:00:00.000Z");

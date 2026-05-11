@@ -1,6 +1,6 @@
-﻿import assert from "node:assert/strict";
+import assert from "node:assert/strict";
 import test from "node:test";
-import { buildConflictPayload, buildMergedUpdate } from "./optimistic-conflict.ts";
+import { buildConflictPayload, buildMergedUpdate } from "./optimistic-conflict";
 
 test("buildConflictPayload returns field diffs for changed fields", () => {
   const result = buildConflictPayload({
